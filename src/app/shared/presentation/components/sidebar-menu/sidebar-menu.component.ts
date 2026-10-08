@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { filter, map, startWith } from 'rxjs/operators';
+import { IamStore } from '../../../../iam/application/iam.store';
+import { ProfileStore } from '../../../../profile-management/application/profile.store';
 import { getRoleFromPath } from '../../../application/role-routing';
 import { RestaurantSubscriptionStore } from '../../../application/restaurant-subscription.store';
 
@@ -25,6 +27,8 @@ export interface MenuItem {
 export class SidebarMenuComponent {
   private readonly router = inject(Router);
   private readonly restaurantSubscriptionStore = inject(RestaurantSubscriptionStore);
+  private readonly iamStore = inject(IamStore);
+  private readonly profileStore = inject(ProfileStore);
   private readonly currentUrl = toSignal(
     this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
@@ -34,13 +38,29 @@ export class SidebarMenuComponent {
     { initialValue: this.router.url }
   );
 
-  readonly restaurantName = computed(() => 'GRAN DRAGON CHIFA');
-  readonly currentPlan = computed(() =>
-    this.isSupplierArea() ? 'Enterprise' : this.restaurantSubscriptionStore.plan()
-  );
   readonly isSupplierArea = computed(() => getRoleFromPath(this.currentUrl() ?? '') === 'supplier');
+  readonly currentPlan = computed(() => this.restaurantSubscriptionStore.plan());
   readonly activeRoleKey = computed(() => this.isSupplierArea() ? 'shared.sidebar.supplier' : 'shared.sidebar.restaurant');
-  readonly activeBusinessName = computed(() => this.isSupplierArea() ? 'DISTRIBUIDORA FRESH ANDES' : this.restaurantName());
+  readonly activeBusinessName = computed(() => {
+    const profile = this.profileStore.profile();
+    const expectedType = this.isSupplierArea() ? 'supplier' : 'restaurant';
+    const businessName = profile && profile.profileType === expectedType ? profile.businessName.trim() : '';
+    return businessName || this.iamStore.currentUser()?.email || '';
+  });
+
+  private requestedProfileKey = '';
+
+  constructor() {
+    effect(() => {
+      const email = this.iamStore.currentUser()?.email;
+      const profileType = this.isSupplierArea() ? 'supplier' : 'restaurant';
+      const key = `${profileType}:${email ?? ''}`;
+      if (email && key !== this.requestedProfileKey) {
+        this.requestedProfileKey = key;
+        this.profileStore.loadProfile(profileType, email);
+      }
+    });
+  }
 
   readonly restaurantMenuItems: MenuItem[] = [
     { id: 'dashboard', path: '/restaurant/dashboard', i18nKey: 'shared.sidebar.dashboard', iconOff: '/assets/images/icons/dashboard-icon.svg', iconOn: '/assets/images/icons/dashboard-on-icon.svg', exact: true },

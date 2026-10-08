@@ -78,6 +78,10 @@ export class IamStore {
     this.loadingSignal.set(false);
     this.errorSignal.set(null);
     this.clearCurrentUser();
+    // Root stores cache the previous account's data; a full reload guarantees a clean session.
+    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+      window.location.replace('/login');
+    }
   }
 
   login(email: string, password: string): void {
