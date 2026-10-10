@@ -25,6 +25,7 @@ export class HeaderContent {
     this.activeRole() === 'supplier' ? 'shared.sidebar.supplier' : 'shared.sidebar.restaurant'
   );
 
+  protected readonly userEmail = computed(() => this.iamStore.currentUser()?.email ?? '');
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
   private readonly iamStore = inject(IamStore);

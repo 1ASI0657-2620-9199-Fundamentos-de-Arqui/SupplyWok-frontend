@@ -93,7 +93,7 @@ export class SupplierAlertsComponent implements OnInit {
 
   getDetailMessageKey(detail: string): string {
     const normalized = String(detail ?? '').trim().toLowerCase();
-    return this.detailMessageMap[normalized] ?? 'supplier-management.alerts.messages.new-urgent-order-from-ming-garden';
+    return this.detailMessageMap[normalized] ?? String(detail ?? '');
   }
 
   formatAlertDate(value: string): string {

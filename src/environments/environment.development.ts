@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
 
-  supplyWokPlatformBaseUrl: 'https://supplywok-backend.onrender.com/api/v1',
+  supplyWokPlatformBaseUrl: 'http://localhost:8080/api/v1',
   authenticationEndpointPath: '/authentication',
   authenticationSignInEndpointPath: '/sign-in',
   authenticationSignUpEndpointPath: '/sign-up',
@@ -22,7 +22,6 @@ export const environment = {
   restaurantAlertsEndpointPath: '/restaurant/alerts',
   supplierClientsEndpointPath: '/clients',
   suppliersEndpointPath: '/suppliers',
-  supplierPortalSupplierId: 1,
   catalogItemsEndpointPath: '/catalog-items',
   demandForecastsEndpointPath: '/demand-forecasts',
   supplierSubscriptionsEndpointPath: '/supplier-subscriptions',

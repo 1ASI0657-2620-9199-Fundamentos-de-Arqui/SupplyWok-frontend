@@ -46,8 +46,6 @@ package-lock.json
 
 # Cache de herramientas
 .angular/
-.claude/
-.gemini/
 .junie/
 
 # Configuración de editores

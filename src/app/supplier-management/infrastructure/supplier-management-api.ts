@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { BaseApi } from '../../shared/infrastructure/base-api';
@@ -28,7 +28,7 @@ export class SupplierManagementApi extends BaseApi {
 
   getOrders(): Observable<Order[]> {
     return this.resolveSupplierId().pipe(
-      switchMap((supplierId) => this.ordersEndpoint.getAll().pipe(
+      switchMap((supplierId) => supplierId === null ? of([]) : this.ordersEndpoint.getAll().pipe(
         map((orders) => orders.filter((order) => String(order.supplierId) === String(supplierId)))
       ))
     );
@@ -40,31 +40,31 @@ export class SupplierManagementApi extends BaseApi {
 
   getCatalogItems(): Observable<CatalogItem[]> {
     return this.resolveSupplierId().pipe(
-      switchMap((supplierId) => new CatalogItemsApiEndpoint(this.http, supplierId).getAll())
+      switchMap((supplierId) => supplierId === null ? of([]) : new CatalogItemsApiEndpoint(this.http, supplierId).getAll())
     );
   }
 
   createCatalogItem(item: CatalogItem): Observable<CatalogItem> {
     return this.resolveSupplierId().pipe(
-      switchMap((supplierId) => new CatalogItemsApiEndpoint(this.http, supplierId).create(item))
+      switchMap((supplierId) => supplierId === null ? this.noSupplierError() : new CatalogItemsApiEndpoint(this.http, supplierId).create(item))
     );
   }
 
   updateCatalogItem(item: CatalogItem): Observable<CatalogItem> {
     return this.resolveSupplierId().pipe(
-      switchMap((supplierId) => new CatalogItemsApiEndpoint(this.http, supplierId).update(item, String(item.id)))
+      switchMap((supplierId) => supplierId === null ? this.noSupplierError() : new CatalogItemsApiEndpoint(this.http, supplierId).update(item, String(item.id)))
     );
   }
 
   deleteCatalogItem(id: number | string): Observable<void> {
     return this.resolveSupplierId().pipe(
-      switchMap((supplierId) => new CatalogItemsApiEndpoint(this.http, supplierId).delete(id))
+      switchMap((supplierId) => supplierId === null ? this.noSupplierError() : new CatalogItemsApiEndpoint(this.http, supplierId).delete(id))
     );
   }
 
   getClients(): Observable<Client[]> {
     return this.resolveSupplierId().pipe(
-      switchMap((supplierId) => new ClientsApiEndpoint(this.http, supplierId).getAll())
+      switchMap((supplierId) => supplierId === null ? of([]) : new ClientsApiEndpoint(this.http, supplierId).getAll())
     );
   }
 
@@ -76,14 +76,18 @@ export class SupplierManagementApi extends BaseApi {
     return of(new SupplierSubscription());
   }
 
-  private resolveSupplierId(): Observable<number | string> {
+  private resolveSupplierId(): Observable<number | string | null> {
     const currentEmail = this.iamStore.currentUser()?.email?.trim().toLowerCase();
     if (!currentEmail) {
-      return of(environment.supplierPortalSupplierId);
+      return of(null);
     }
 
     return this.http.get<SupplierResource[]>(`${environment.supplyWokPlatformBaseUrl}${environment.suppliersEndpointPath}`).pipe(
-      map((suppliers) => suppliers.find((supplier) => supplier.email?.trim().toLowerCase() === currentEmail)?.id ?? environment.supplierPortalSupplierId)
+      map((suppliers) => suppliers.find((supplier) => supplier.email?.trim().toLowerCase() === currentEmail)?.id ?? null)
     );
+  }
+
+  private noSupplierError(): Observable<never> {
+    return throwError(() => new Error('No supplier is linked to the current account. Complete your supplier profile first.'));
   }
 }

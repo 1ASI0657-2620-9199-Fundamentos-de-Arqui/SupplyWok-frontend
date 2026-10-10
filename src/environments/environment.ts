@@ -22,7 +22,6 @@ export const environment = {
   restaurantAlertsEndpointPath: '/restaurant/alerts',
   supplierClientsEndpointPath: '/clients',
   suppliersEndpointPath: '/suppliers',
-  supplierPortalSupplierId: 1,
   catalogItemsEndpointPath: '/catalog-items',
   demandForecastsEndpointPath: '/demand-forecasts',
   supplierSubscriptionsEndpointPath: '/supplier-subscriptions',

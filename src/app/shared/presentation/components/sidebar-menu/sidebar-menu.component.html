@@ -9,7 +9,7 @@
 
   <div class="sidebar__status">
     <span class="sidebar__tag sidebar__tag--role">{{ activeRoleKey() | translate }}</span>
-    <span class="sidebar__tag sidebar__tag--plan">{{ 'shared.sidebar.current-plan' | translate }} {{ currentPlan() }}</span>
+    @if (!isSupplierArea()) {<span class="sidebar__tag sidebar__tag--plan">{{ 'shared.sidebar.current-plan' | translate }} {{ currentPlan() }}</span>}
   </div>
 
   <nav class="sidebar__nav" aria-label="Main Navigation">

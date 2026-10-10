@@ -6,6 +6,8 @@ import { Sensor } from '../domain/model/sensor.entity';
 import { RestaurantAlert, RestaurantAlertSeverity } from '../domain/model/restaurant-alert.entity';
 import { SupplierAlert } from '../domain/model/supplier-alert.entity';
 import { IotMonitoringApi } from '../infrastructure/iot-monitoring-api';
+import { IamStore } from '../../iam/application/iam.store';
+import { normalizeRole } from '../../shared/application/role-routing';
 
 @Injectable({
   providedIn: 'root',
@@ -107,8 +109,14 @@ export class IotStore {
 
   readonly openSupplierAlertsCount = computed(() => this.supplierAlerts().filter((alert) => alert.status === 'open').length);
 
+  private readonly iamStore = inject(IamStore);
+
   constructor(private iotMonitoringApi: IotMonitoringApi) {
-    this.loadRestaurantAlerts();
+    if (normalizeRole(this.iamStore.currentUserRole()) === 'supplier') {
+      this.loadSupplierAlerts();
+    } else {
+      this.loadRestaurantAlerts();
+    }
   }
 
   getSensorById(id: number | null | undefined): Signal<Sensor | undefined> {

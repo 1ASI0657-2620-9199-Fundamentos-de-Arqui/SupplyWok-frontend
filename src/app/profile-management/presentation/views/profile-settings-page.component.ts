@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, effect, inject } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { Router } from '@angular/router';
@@ -30,64 +30,64 @@ import { Profile } from '../../domain/model/profile.entity';
 
         <label class="profile-field profile-field--full">
           <span>{{ translationPrefix() + '.fields.businessName' | translate }}</span>
-          <input name="businessName" [(ngModel)]="formModel.businessName" autocomplete="organization" />
+          <input name="businessName" [(ngModel)]="formModel().businessName" autocomplete="organization" />
         </label>
 
         <div class="profile-settings-card__row">
           <label class="profile-field">
             <span>{{ 'profiles.settings.fields.firstName' | translate }}</span>
-            <input name="firstName" [(ngModel)]="formModel.firstName" autocomplete="given-name" />
+            <input name="firstName" [(ngModel)]="formModel().firstName" autocomplete="given-name" />
           </label>
 
           <label class="profile-field">
             <span>{{ 'profiles.settings.fields.lastName' | translate }}</span>
-            <input name="lastName" [(ngModel)]="formModel.lastName" autocomplete="family-name" />
+            <input name="lastName" [(ngModel)]="formModel().lastName" autocomplete="family-name" />
           </label>
         </div>
 
         <label class="profile-field profile-field--full">
           <span>{{ 'profiles.settings.fields.email' | translate }}</span>
-          <input name="email" [(ngModel)]="formModel.email" autocomplete="email" type="email" readonly />
+          <input name="email" [(ngModel)]="formModel().email" autocomplete="email" type="email" readonly />
         </label>
 
         <div class="profile-settings-card__row">
           <label class="profile-field">
             <span>{{ 'profiles.settings.fields.street' | translate }}</span>
-            <input name="street" [(ngModel)]="formModel.street" autocomplete="address-line1" />
+            <input name="street" [(ngModel)]="formModel().street" autocomplete="address-line1" />
           </label>
 
           <label class="profile-field">
             <span>{{ 'profiles.settings.fields.district' | translate }}</span>
-            <input name="district" [(ngModel)]="formModel.district" />
+            <input name="district" [(ngModel)]="formModel().district" />
           </label>
         </div>
 
         <div class="profile-settings-card__row">
           <label class="profile-field">
             <span>{{ 'profiles.settings.fields.city' | translate }}</span>
-            <input name="city" [(ngModel)]="formModel.city" autocomplete="address-level2" />
+            <input name="city" [(ngModel)]="formModel().city" autocomplete="address-level2" />
           </label>
 
           <label class="profile-field">
             <span>{{ 'profiles.settings.fields.country' | translate }}</span>
-            <input name="country" [(ngModel)]="formModel.country" autocomplete="country-name" />
+            <input name="country" [(ngModel)]="formModel().country" autocomplete="country-name" />
           </label>
         </div>
 
         <label class="profile-field profile-field--full">
           <span>{{ 'profiles.settings.fields.supportContact' | translate }}</span>
-          <input name="supportContact" [(ngModel)]="formModel.supportContact" autocomplete="tel" />
+          <input name="supportContact" [(ngModel)]="formModel().supportContact" autocomplete="tel" />
         </label>
 
         <div class="profile-settings-card__footer">
           <label class="profile-toggle">
-            <input name="emailNotifications" [(ngModel)]="formModel.emailNotifications" type="checkbox" />
+            <input name="emailNotifications" [(ngModel)]="formModel().emailNotifications" type="checkbox" />
             <span class="profile-toggle__track"></span>
             <span>{{ 'profiles.settings.fields.emailNotifications' | translate }}</span>
           </label>
 
           <label class="profile-toggle">
-            <input name="smsNotifications" [(ngModel)]="formModel.smsNotifications" type="checkbox" />
+            <input name="smsNotifications" [(ngModel)]="formModel().smsNotifications" type="checkbox" />
             <span class="profile-toggle__track"></span>
             <span>{{ 'profiles.settings.fields.smsNotifications' | translate }}</span>
           </label>
@@ -144,14 +144,14 @@ export class ProfileSettingsPageComponent implements OnInit {
   protected readonly store = inject(ProfileStore);
   private readonly router = inject(Router);
   private readonly iamStore = inject(IamStore);
-  protected formModel = new Profile({ profileType: this.activeProfileType() });
+  protected readonly formModel = signal(new Profile({ profileType: this.activeProfileType() }));
   protected readonly translationPrefix = computed(() => `profiles.settings.${this.activeProfileType()}`);
 
   constructor() {
     effect(() => {
       const profile = this.store.profile();
       if (profile && profile.profileType === this.activeProfileType()) {
-        this.formModel = profile.clone();
+        this.formModel.set(profile.clone());
         this.ensureAccountEmail();
       }
     });
@@ -162,9 +162,9 @@ export class ProfileSettingsPageComponent implements OnInit {
   }
 
   protected save(): void {
-    this.formModel.profileType = this.activeProfileType();
+    this.formModel().profileType = this.activeProfileType();
     this.ensureAccountEmail();
-    this.store.updateProfile(this.formModel.clone(), this.currentAccountEmail());
+    this.store.updateProfile(this.formModel().clone(), this.currentAccountEmail());
   }
 
   private activeProfileType(): AppRoleScope {
@@ -178,7 +178,7 @@ export class ProfileSettingsPageComponent implements OnInit {
   private ensureAccountEmail(): void {
     const accountEmail = this.currentAccountEmail();
     if (accountEmail) {
-      this.formModel.email = accountEmail;
+      this.formModel().email = accountEmail;
     }
   }
 }
